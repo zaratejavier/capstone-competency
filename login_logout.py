@@ -56,7 +56,7 @@ class Assessments:
         self.assessment_id = None
         self.competency_id = None
         self.name = None
-        self.date_taken = None
+        self.date_created = None  # this was 'date_taken'
 
     def set_all(self, name, competency_id, date_created='2021-11-18 08:30:00'):
         self.competency_id = competency_id
@@ -94,6 +94,32 @@ class Assessments:
         row = cursor.execute(select_sql, (assessment_id,)).fetchone()
 
         return row
+
+    def load(self, cursor):
+        select_sql = '''
+        SELECT assessment_id, competency_id, name, date_created FROM Assessments WHERE assessment_id = ?
+       ;'''
+        row = cursor.execute(select_sql, (self.assessment_id,)).fetchone()
+        print("***********************", row)
+        if not row:
+            print("NOTHING RETURNED")
+            return
+        self.assessment_id = row[0]
+        self.competency_id = row[1]
+        self.name = row[2]
+        self.date_created = row[3]
+
+    def update(self, cursor):
+        insert_sql = '''
+          UPDATE Assessments
+           SET assessment_id = ?, competency_id = ?, name = ?, date_created = ?
+            WHERE assessment_id = ?
+          ;'''
+        params = (self.assessment_id, self.competency_id, self.name,
+                  self.date_created, self.assessment_id)
+        print(params)
+        cursor.execute(insert_sql, params)
+        cursor.connection.commit()
 
 
 class Competency:
@@ -375,8 +401,7 @@ def view_all_users(cursor):
         '''
      SELECT user_id, first_name, last_name, email, active, date_created, hire_date, user_type
      FROM Users
-     WHERE user_type = 'user';
-''').fetchall()
+     WHERE user_type = 'user';''').fetchall()
 
     print(f'{"ID":<14} {"First Name":<22} {"Last Name":<20} {"Email":<40} {"active":<15} {"Date Created":<15} {"Hire Date":<15} {"User Type":<30}')
 
@@ -423,8 +448,7 @@ def report_users_competency(cursor):
     rows = cursor.execute(
         '''
      SELECT *
-     FROM Compentencies
-''').fetchall()
+     FROM Compentencies''').fetchall()
 
     print(f'{"Id":<14} {"Name":<29} {"Date Created":<15}')
 
@@ -453,8 +477,7 @@ def report_users_competency(cursor):
 	  LEFT JOIN Compentencies as c
 	  on c.competency_id = a.competency_id
 	  WHERE c.competency_id = ?) as u1
-on u1.user_id = u2.user_id;''',
-                          (competency_id,)).fetchall()
+  on u1.user_id = u2.user_id;''', (competency_id,)).fetchall()
 
     print(f'{"Competency Name":<14} {"First Name":<14} {"Last Name":<14} {"Average score":<14} {"Assessment Name":<40} {"Date Taken":<30} {"Competency Score":<14}  ')
     print("------------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
@@ -520,12 +543,12 @@ def edit_personal_information(cursor, user):
     print(
         f'{"First name"}: {row[0]!s:<15}\n{"Last name"}: {row[1]!s:<15}\n{"Password"}: ******* \n ')
 
-    user_input = input("What field do you want to change?: ")
+    user_input = input("What field do you want to change?: ").lower()
     change_to = input(f"What do you want to change {user_input} to: ")
 
-    if user_input == "First Name":
+    if user_input == "first name":
         user.first_name = change_to
-    elif user_input == "Last Name":
+    elif user_input == "last name":
         user.last_name = change_to
     else:
         user.change_password(change_to)
@@ -548,12 +571,12 @@ def edit_users_info(cursor):
 
     print(
         f' {"ID"}: {user_to_edit.user_id!s:<15}\n {"First name"}: {user_to_edit.first_name!s:<15}\n {"Last name"}: {user_to_edit.last_name!s:<15}\n {"phone"}: {user_to_edit.phone!s:<15}\n {"email"}: {user_to_edit.email!s:<15} \n {"active"}: {user_to_edit.active!s:<15} \n {"date_created"}: {user_to_edit.date_created!s:<15} \n {"hire_date"}: {user_to_edit.hire_date!s:<15} \n {"user_type"}: {user_to_edit.user_type!s:<15} \n  ')
-    user_input = input("What field do you want to change?: ")
+    user_input = input("What field do you want to change?: ").lower()
     change_to = input(f"What do you want to change {user_input} to: ")
 
-    if user_input == "First Name":
+    if user_input == "first name":
         user_to_edit.first_name = change_to
-    elif user_input == "Last Name":
+    elif user_input == "last name":
         user_to_edit.last_name = change_to
     elif user_input == "phone":
         user_to_edit.phone = change_to
@@ -576,8 +599,7 @@ def edit_competency(cursor):
     rows = cursor.execute(
         '''
      SELECT *
-     FROM Compentencies
-''').fetchall()
+     FROM Compentencies''').fetchall()
 
     print(f'{"ID":<14} {"Name":<26}{"Date Created":<15} ')
 
@@ -585,7 +607,8 @@ def edit_competency(cursor):
     for row in rows:
         print(f'{row[0]!s:<15} {row[1]!s:<27} {row[2]!s:<18} ')
 
-    competency_id = input("What Competency do you want to edit?: ")
+    competency_id = input(
+        "What Competency do you want to edit?(Choose by ID): ")
 
     comp_to_edit = Competency()
     comp_to_edit.competency_id = competency_id
@@ -593,18 +616,54 @@ def edit_competency(cursor):
 
     print(
         f' {"ID"}: {comp_to_edit.competency_id!s:<15}\n {"Name"}: {comp_to_edit.name!s:<15}\n {"Date Created"}: {comp_to_edit.date_created!s:<15}\n    ')
-    user_input = input("What field do you want to change?: ")
+    user_input = input("What field do you want to change?: ").lower()
     change_to = input(f"What do you want to change {user_input} to: ")
 
-    if user_input == "Name":
+    if user_input == "name":
         comp_to_edit.name = change_to
-    elif user_input == "Date Created":
+    elif user_input == "date created":
         comp_to_edit.date_created = change_to
     comp_to_edit.update(cursor)
 
 
-def edit_assessment():
+def edit_assessment(cursor):
+    rows = cursor.execute(
+        '''
+     SELECT *
+     FROM Assessments''').fetchall()
+
+    print(f'{"Assessment ID":<14} {"Competency ID":<18} {"Name":<43}{"Date Created":<15} ')
+    print("-----------------------------------------------------------------------------------------")
+    for row in rows:
+        print(f'{row[0]!s:<15} {row[1]!s:<18} {row[2]!s:<43} {row[3]!s:<18} ')
+
+    assessment_id = input(
+        "What Assessment do you want to edit?(Choose by Assesment ID): ")
+
+    assessment_to_edit = Assessments()
+    assessment_to_edit.assessment_id = assessment_id
+    assessment_to_edit.load(cursor)
+
+    print(
+        f' {"Assessment ID"}: {assessment_to_edit.assessment_id!s:<15}\n {"Competency ID"}: {assessment_to_edit.competency_id!s:<15}\n {"Name"}: {assessment_to_edit.name!s:<15}\n {"Date Created"}: {assessment_to_edit.date_created!s:<15}\n    ')
+    user_input = input("What field do you want to change?: ").lower()
+    change_to = input(f"What do you want to change {user_input} to: ")
+
+    if user_input == "assessment id":
+        assessment_to_edit.assessment_id = change_to
+    if user_input == "competency id":
+        assessment_to_edit.competency_id = change_to
+    elif user_input == "name":
+        assessment_to_edit.name = change_to
+    elif user_input == "date created":
+        assessment_to_edit.date_created = change_to
+    assessment_to_edit.update(cursor)
+
+
+# **************************************************EDIT ASSESSMENT_RESULT START*****************************************
+def edit_assessment_result(cursor):
     pass
+# **************************************************EDIT ASSESSMENT_RESULT END*****************************************
 
 
 def exportReport(cursor):
@@ -641,8 +700,10 @@ def manager_commands(user_input, cursor):
         edit_users_info(cursor)
     elif(user_input == "8B"):
         edit_competency(cursor)
-    elif(user_input == "8B"):
+    elif(user_input == "8C"):
         edit_assessment(cursor)
+    elif(user_input == "8C"):
+        edit_assessment_result(cursor)
     elif(user_input == "9"):
         exportReport(cursor)
     # elif(user_input == "8C"):
