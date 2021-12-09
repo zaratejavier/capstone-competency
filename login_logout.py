@@ -8,14 +8,15 @@ cursor = connection.cursor()
 
 class AssesmentResults:
     def __init__(self):
-        self.assessment_id = None
+        self.assessment_results_id = None
         self.user_id = None
+        self.assessment_id = None
         self.score = None
         self.date_taken = None
 
-    def set_all(self, assessment_id, user_id, score, date_taken='2021-11-18 08:30:00'):
-        self.assessment_id = assessment_id,
+    def set_all(self, user_id, assessment_id, score, date_taken='2021-11-18 08:30:00'):
         self.user_id = user_id,
+        self.assessment_id = assessment_id,
         self.score = score,
         self.date_taken = date_taken
 
@@ -49,6 +50,49 @@ class AssesmentResults:
         else:
             print(
                 f"The User_id with id {self.user_id} and {self.assessment_id} does not exist")
+
+    def load(self, cursor):
+        select_sql = '''
+        SELECT assessment_results_id, user_id, assessment_id, score, date_taken FROM Assessment_results WHERE assessment_results_id = ?
+       ;'''
+        row = cursor.execute(
+            select_sql, (self.assessment_results_id,)).fetchone()
+        print("***********************", row)
+        if not row:
+            print("NOTHING RETURNED")
+            return
+        self.assessment_results_id = row[0]
+        self.user_id = row[1]
+        self.assessment_id = row[2]
+        self.score = row[3]
+        self.date_taken = row[4]
+
+    # def load(self, cursor):
+    #     select_sql = '''
+    #     SELECT assessment_id, competency_id, name, date_created FROM Assessments WHERE assessment_id = ?
+    #    ;'''
+    #     row = cursor.execute(select_sql, (self.assessment_id,)).fetchone()
+    #     print("***********************", row)
+    #     if not row:
+    #         print("NOTHING RETURNED")
+    #         return
+    #     self.assessment_id = row[0]
+    #     self.competency_id = row[1]
+    #     self.name = row[2]
+    #     self.date_created = row[3]
+
+    def update(self, cursor):
+        print("!!!!!!!!!!!!!", self.score)
+        insert_sql = '''
+          UPDATE Assessment_results
+           SET assessment_results_id = ?, user_id = ?, assessment_id = ?, score = ?, date_taken = ?
+            WHERE assessment_results_id = ?
+          ;'''
+        params = (self.assessment_results_id, self.user_id, self.assessment_id,
+                  self.score, self.date_taken, self.assessment_results_id)
+        print(params)
+        cursor.execute(insert_sql, params)
+        cursor.connection.commit()
 
 
 class Assessments:
@@ -110,6 +154,7 @@ class Assessments:
         self.date_created = row[3]
 
     def update(self, cursor):
+        print("--------------", self.name)
         insert_sql = '''
           UPDATE Assessments
            SET assessment_id = ?, competency_id = ?, name = ?, date_created = ?
@@ -424,7 +469,7 @@ def searh_users(cursor):
 
 
 def all_user_competency(cursor):
-    search_by_id = input("Search by ID ")
+    search_by_id = input("Search by user ID:  ")
 
     rows = cursor.execute('''
   SELECT a.name AS competency_name
@@ -657,12 +702,48 @@ def edit_assessment(cursor):
         assessment_to_edit.name = change_to
     elif user_input == "date created":
         assessment_to_edit.date_created = change_to
+    print("change to --------", change_to)
+
     assessment_to_edit.update(cursor)
 
 
 # **************************************************EDIT ASSESSMENT_RESULT START*****************************************
 def edit_assessment_result(cursor):
-    pass
+    rows = cursor.execute(
+        '''
+     SELECT *
+     FROM Assessment_results''').fetchall()
+
+    print(f'{"Assessment Result ID":<23} {"User ID":<18} {"Assessment ID":<24} {"Score":<15} {"Date Taken":<15} ')
+    print("----------------------------------------------------------------------------------------------------------")
+    for row in rows:
+        print(
+            f'{row[0]!s:<23} {row[1]!s:<18} {row[2]!s:<24} {row[3]!s:<15} {row[4]!s:<12}  ')
+
+    assessment_result_id = input(
+        "What Assessment Result do you want to edit?(Choose by Assesment ID): ")
+
+    assessment_result_to_edit = AssesmentResults()
+    assessment_result_to_edit.assessment_results_id = assessment_result_id
+    assessment_result_to_edit.load(cursor)
+
+    print(
+        f' {"Assessment Result ID"}: {assessment_result_to_edit.assessment_results_id!s:<15}\n {"User ID"}: {assessment_result_to_edit.user_id!s:<15}\n {"Assessment ID"}: {assessment_result_to_edit.assessment_id!s:<15}\n {"Score"}: {assessment_result_to_edit.score!s:<15}\n {"Date Taken"}: {assessment_result_to_edit.date_taken!s:<15}\n     ')
+    user_input = input("What field do you want to change?: ").lower()
+    change_to = input(f"What do you want to change {user_input} to: ")
+
+    if user_input == "assessment result id":
+        assessment_result_to_edit.assessment_results_id = change_to
+    elif user_input == "user id":
+        assessment_result_to_edit.user_id = change_to
+    elif user_input == "assessment id":
+        assessment_result_to_edit.assessment_id = change_to
+    elif user_input == "score":
+        assessment_result_to_edit.score = change_to
+    elif user_input == "date taken":
+        assessment_result_to_edit.date_taken = change_to
+    assessment_result_to_edit.update(cursor)
+    print("change to --------", change_to)
 # **************************************************EDIT ASSESSMENT_RESULT END*****************************************
 
 
@@ -688,21 +769,21 @@ def manager_commands(user_input, cursor):
     elif(user_input == "6"):
         # view a list of assessments for a given user
         list_of_assessments(cursor)
-    elif(user_input == "7A"):
+    elif(user_input == "7a"):
         create_user_record(cursor)
-    elif(user_input == "7B"):
+    elif(user_input == "7b"):
         create_competency(cursor)
-    elif(user_input == "7C"):
+    elif(user_input == "7c"):
         create_assessment(cursor)
-    elif(user_input == "7D"):
+    elif(user_input == "7d"):
         create_assessment_results(cursor)
-    elif(user_input == "8A"):
+    elif(user_input == "8a"):
         edit_users_info(cursor)
-    elif(user_input == "8B"):
+    elif(user_input == "8b"):
         edit_competency(cursor)
-    elif(user_input == "8C"):
+    elif(user_input == "8c"):
         edit_assessment(cursor)
-    elif(user_input == "8C"):
+    elif(user_input == "8d"):
         edit_assessment_result(cursor)
     elif(user_input == "9"):
         exportReport(cursor)
@@ -738,10 +819,10 @@ while query != "q":
         # query = input('Which command do you want to run: ')
         if user.user_type == "manager":
             query = input('''
-                [1] You can view all users in a list\n
-                [2] Search for users by first name or last name\n
-                [3] View all user competencies by user\n
-                [4] View a report of all users and their competency levels for a given competency\n
+                [1] You can view all users in a list
+                [2] Search for users by first name or last name
+                [3] View all user competencies by user
+                [4] View a report of all users and their competency levels for a given competency
                 [5] view a competency level report for an individual user
                 [6] view a list of assessments for a given user
                 ADD-
@@ -756,13 +837,14 @@ while query != "q":
                       [8D] edit an assessment result
                 [9] Report
                 [Logout] Logout of session
-            ''')
+            ''').lower()
             manager_commands(query, cursor)
         elif user.user_type == "user":
             query = input(
-                '''[1] Edit personal information.
-                   [2] View Competency and Assessment Data
-                   [Logout] Logout of session
+                '''
+                [1] Edit personal information.\n
+                [2] View Competency and Assessment Data\n
+                [Logout] Logout of session
                  ''')
             user_commands(query, cursor, user)
         if query.lower() == 'logout':
