@@ -1,6 +1,8 @@
 import pdb
 import sqlite3
+import datetime
 import bcrypt
+import csv
 
 connection = sqlite3.connect('capstone_data.db', timeout=10)
 cursor = connection.cursor()
@@ -14,7 +16,7 @@ class AssesmentResults:
         self.score = None
         self.date_taken = None
 
-    def set_all(self, user_id, assessment_id, score, date_taken='2021-11-18 08:30:00'):
+    def set_all(self, user_id, assessment_id, score, date_taken):
         self.user_id = user_id,
         self.assessment_id = assessment_id,
         self.score = score,
@@ -34,17 +36,10 @@ class AssesmentResults:
         assessment = Assessments()
         user = User()
         if assessment.get_assessment(self.assessment_id[0], cursor) and user.get_user(self.user_id[0], cursor):
-
-            # params = (self.user_id, self.assessment_id,
-            #           self.score, self.date_taken,)
-            print(params)
             cursor.execute(insert_sql, params)
             cursor.connection.commit()
-
-            # new_user_id = cursor.execute('SELECT user_id FROM Users WHERE email=?',(self.email,)).fetchone()
             new_assessment_id = cursor.execute(
                 'SELECT last_insert_rowid()').fetchone()
-            print("----------------------", new_assessment_id)
             self.new_assessment_id = new_assessment_id[0]
 
         else:
@@ -57,7 +52,6 @@ class AssesmentResults:
        ;'''
         row = cursor.execute(
             select_sql, (self.assessment_results_id,)).fetchone()
-        print("***********************", row)
         if not row:
             print("NOTHING RETURNED")
             return
@@ -67,22 +61,7 @@ class AssesmentResults:
         self.score = row[3]
         self.date_taken = row[4]
 
-    # def load(self, cursor):
-    #     select_sql = '''
-    #     SELECT assessment_id, competency_id, name, date_created FROM Assessments WHERE assessment_id = ?
-    #    ;'''
-    #     row = cursor.execute(select_sql, (self.assessment_id,)).fetchone()
-    #     print("***********************", row)
-    #     if not row:
-    #         print("NOTHING RETURNED")
-    #         return
-    #     self.assessment_id = row[0]
-    #     self.competency_id = row[1]
-    #     self.name = row[2]
-    #     self.date_created = row[3]
-
     def update(self, cursor):
-        print("!!!!!!!!!!!!!", self.score)
         insert_sql = '''
           UPDATE Assessment_results
            SET assessment_results_id = ?, user_id = ?, assessment_id = ?, score = ?, date_taken = ?
@@ -90,7 +69,6 @@ class AssesmentResults:
           ;'''
         params = (self.assessment_results_id, self.user_id, self.assessment_id,
                   self.score, self.date_taken, self.assessment_results_id)
-        print(params)
         cursor.execute(insert_sql, params)
         cursor.connection.commit()
 
@@ -102,7 +80,7 @@ class Assessments:
         self.name = None
         self.date_created = None  # this was 'date_taken'
 
-    def set_all(self, name, competency_id, date_created='2021-11-18 08:30:00'):
+    def set_all(self, name, competency_id, date_created=datetime.datetime.now()):
         self.competency_id = competency_id
         self.name = name
         self.date_created = date_created
@@ -118,11 +96,9 @@ class Assessments:
         if competency.get_competency(self.competency_id, cursor):
 
             params = (self.competency_id, self.name, self.date_created,)
-            print(params)
             cursor.execute(insert_sql, params)
             cursor.connection.commit()
 
-            # new_user_id = cursor.execute('SELECT user_id FROM Users WHERE email=?',(self.email,)).fetchone()
             new_assessment_id = cursor.execute(
                 'SELECT last_insert_rowid()').fetchone()
             self.new_assessment_id = new_assessment_id[0]
@@ -144,7 +120,6 @@ class Assessments:
         SELECT assessment_id, competency_id, name, date_created FROM Assessments WHERE assessment_id = ?
        ;'''
         row = cursor.execute(select_sql, (self.assessment_id,)).fetchone()
-        print("***********************", row)
         if not row:
             print("NOTHING RETURNED")
             return
@@ -154,7 +129,6 @@ class Assessments:
         self.date_created = row[3]
 
     def update(self, cursor):
-        print("--------------", self.name)
         insert_sql = '''
           UPDATE Assessments
            SET assessment_id = ?, competency_id = ?, name = ?, date_created = ?
@@ -162,7 +136,6 @@ class Assessments:
           ;'''
         params = (self.assessment_id, self.competency_id, self.name,
                   self.date_created, self.assessment_id)
-        print(params)
         cursor.execute(insert_sql, params)
         cursor.connection.commit()
 
@@ -173,7 +146,7 @@ class Competency:
         self.name = None
         self.date_created = None
 
-    def set_all(self, name, date_created='2021-11-18 08:30:00'):
+    def set_all(self, name, date_created=datetime.datetime.now()):
         self.name = name
         self.date_created = date_created
 
@@ -189,7 +162,6 @@ class Competency:
         cursor.execute(insert_sql, params)
         cursor.connection.commit()
 
-        # new_user_id = cursor.execute('SELECT user_id FROM Users WHERE email=?',(self.email,)).fetchone()
         new_competency_id = cursor.execute(
             'SELECT last_insert_rowid()').fetchone()
         self.competency_id = new_competency_id[0]
@@ -246,7 +218,7 @@ class User:
         self.active = None
         self.hire_date = None
 
-    def set_all(self, first_name, last_name, email, phone, password, active, user_type, date_created='2021-11-18 08:30:00', hire_date='2021-11-18 08:30:00'):
+    def set_all(self, first_name, last_name, email, phone, password, active, user_type, hire_date, date_created=datetime.datetime.now()):
         self.first_name = first_name
         self.last_name = last_name
         self.email = email
@@ -296,7 +268,6 @@ class User:
         params = (self.first_name, self.last_name, self.email,
                   self.phone, self.__password, self.active,
                   self.date_created, self.hire_date, self.user_type)
-        print(params)
         cursor.execute(insert_sql, params)
         cursor.connection.commit()
 
@@ -304,7 +275,6 @@ class User:
         self.user_id = new_user_id[0]
 
     def update(self, cursor):
-        print("---------", self.__password)
         insert_sql = '''
           UPDATE Users
            SET first_name = ?, last_name = ?, email = ?, phone = ?, password = ?,
@@ -314,7 +284,6 @@ class User:
         params = (self.first_name, self.last_name, self.email,
                   self.phone, self.__password, self.active,
                   self.date_created, self.hire_date, self.user_type, self.user_id)
-        print(params)
         cursor.execute(insert_sql, params)
         cursor.connection.commit()
 
@@ -324,11 +293,7 @@ class User:
           FROM Users
           WHERE email=?;
         '''
-
-        print(email)
-        print(select_sql)
         row = cursor.execute(select_sql, (email,)).fetchone()
-        print(row)
         if not row:
             print("NOTHING RETURNED")
             return
@@ -350,10 +315,7 @@ class User:
           WHERE user_id=?;
         '''
 
-        print(email)
-        print(select_sql)
         row = cursor.execute(select_sql, (self.user_id,)).fetchone()
-        print(row)
         if not row:
             print("NOTHING RETURNED")
             return
@@ -383,16 +345,17 @@ def create_user_record(cursor):
     print("### Create New User Record ###")
     print("Please fill out the form below to add a new User")
 
-    first_name = input("Name: ")
+    first_name = input("First Name: ")
     last_name = input("Last Name: ")
     email = input("Email: ")
     phone = input("Phone: ")
     password = input("Password: ")
     user_type = input("user_type user/manager: ")
+    hire_date = input("Hire Date YYYY-MM-DD:")
 
     user = User()
-    user.set_all(first_name, last_name, email, phone, password, 1, user_type,
-                 date_created='2021-11-18', hire_date='2021-11-18')
+    user.set_all(first_name, last_name, email, phone,
+                 password, 1, user_type, hire_date=hire_date)
     user.save(cursor)
     print(f"SUCCESS: '{first_name}' Successfully added!")
 
@@ -402,9 +365,8 @@ def create_competency(cursor):
     competency_name = input("Compentcy: ")
 
     competency = Competency()
-    competency.set_all(competency_name, date_created='2021-11-18')
+    competency.set_all(competency_name)
     competency.save(cursor)
-    # hard coding date for now
 
 
 def create_assessment(cursor):
@@ -413,8 +375,7 @@ def create_assessment(cursor):
     assessment_name = input("Assessment Name: ")
 
     assessment = Assessments()
-    assessment.set_all(assessment_name, competency_id,
-                       date_created='2021-11-18')
+    assessment.set_all(assessment_name, competency_id)
     assessment.save(cursor)
 
 
@@ -422,11 +383,10 @@ def create_assessment_results(cursor):
     user_id = input("User Id: ")
     assessment_id = input("Assessment Id: ")
     score = input("Score: ")
+    date_taken = input("Date taken YYYY-MM-DD: ")
 
-    # date_taken = input("Date Taken: ")
     assesment_results = AssesmentResults()
-    assesment_results.set_all(assessment_id, user_id,
-                              score, date_taken="2021-11-18")
+    assesment_results.set_all(user_id, assessment_id, score, date_taken)
     assesment_results.save(cursor)
 
 
@@ -541,23 +501,27 @@ def report_single_user(cursor):
     search_by_compid = input("Enter Competency Id: ")
 
     rows = cursor.execute('''
-  SELECT u.first_name, u.last_name, u.email, ar.score, a.name AS competency_name, c.name As Assessments, max(ar.date_taken) AS date_taken, avg(score) AS Average_score
-  FROM Users as u
-  INNER JOIN Assessment_results as ar
-  ON ar.user_id = u.user_id
-  INNER JOIN Assessments as a
-  ON a.assessment_id = ar.assessment_id
-  INNER JOIN Compentencies as c
-  on c.competency_id = a.competency_id
-  WHERE c.competency_id = ? u.user_id = ?''',
+    SELECT u.first_name, u.last_name, u.email, ar.score, a.name AS competency_name, c.name As Assessments, max(ar.date_taken) AS date_taken, avg(score) AS Average_score
+    FROM Users as u
+    INNER JOIN Assessment_results as ar
+    ON ar.user_id = u.user_id
+    INNER JOIN Assessments as a
+    ON a.assessment_id = ar.assessment_id
+    INNER JOIN Compentencies as c
+    on c.competency_id = a.competency_id
+    WHERE c.competency_id = ? and u.user_id = ?''',
                           (search_by_compid, search_by_userid,)).fetchall()
 
     print(f'{"First Name":<14} {"Last Name":<18} {"Email":<30} {"Score":<18} {"Competency Name":<40} {"Assessments":<15} {"Date Taken":<15} {"Average Score":<15}')
     print("------------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
 
+    csvRows = [f'{"First Name"},{"Last Name"},{"Email"},{"Score"},{"Competency Name"},{"Assessments"},{"Date Taken"},{"Average Score":<15}']
     for row in rows:
-        print(
-            f'{row[0]!s:<15} {row[1]!s:<18} {row[2]!s:<30} {row[3]!s:<18} {row[4]!s:<40} {row[5]!s:<16} {row[6]!s:<16}  {row[7]!s:<16} ')
+        csvRow = f'{row[0]!s:<15} {row[1]!s:<18} {row[2]!s:<30} {row[3]!s:<18} {row[4]!s:<40} {row[5]!s:<16} {row[6]!s:<16}  {row[7]!s:<16} '
+        print(csvRow)
+        csvRows.append(
+            f'{row[0]},{row[1]},{row[2]},{row[3]},{row[4]},{row[5]},{row[6]},{row[7]}')
+    return csvRows
 
 
 def list_of_assessments(cursor):
@@ -600,9 +564,30 @@ def edit_personal_information(cursor, user):
 
     user.update(cursor)
 
+# ********************************************************view data*****************************************************
 
-def view_data():
-    pass
+
+def view_data(cursor, user):
+    rows = cursor.execute(
+        '''
+     SELECT u.first_name, u.last_name, u.phone, u.email, u.hire_date, u.user_type, a.assessment_id, a.competency_id, a.name, c.competency_id, c.name
+   FROM Users as u 
+   INNER JOIN Assessment_results as ar
+   ON ar.user_id = u.user_id
+   INNER JOIN Assessments as a
+   ON a.assessment_id = ar.assessment_id
+   INNER JOIN Compentencies as c
+   on c.competency_id = a.competency_id
+   WHERE u.user_id = ?  
+;''', (user.user_id,)).fetchall()
+
+    print(f'{"First Name":<17} {"Last Name":<20} {"Phone":<20} {"Email":<23} {"Hire Date":<15} {"User Type":<15} {"Assessment ID":<15} {"compentency ID":<30} {"Assessment Name":<40} {"compentency ID":<30} {"compentency Name":<30}')
+
+    print("--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
+    for row in rows:
+        print(f'{row[0]!s:<17} {row[1]!s:<20} {row[2]!s:<20} {row[3]!s:<23} {row[4]!s:<16} {row[5]!s:<16} {row[6]!s:<16} {row[7]!s:<20} {row[8]!s:<48} {row[9]!s:<30} {row[10]!s:<20}')
+
+# ********************************************************view data*****************************************************
 
 
 def edit_users_info(cursor):
@@ -702,12 +687,10 @@ def edit_assessment(cursor):
         assessment_to_edit.name = change_to
     elif user_input == "date created":
         assessment_to_edit.date_created = change_to
-    print("change to --------", change_to)
 
     assessment_to_edit.update(cursor)
 
 
-# **************************************************EDIT ASSESSMENT_RESULT START*****************************************
 def edit_assessment_result(cursor):
     rows = cursor.execute(
         '''
@@ -743,16 +726,71 @@ def edit_assessment_result(cursor):
     elif user_input == "date taken":
         assessment_result_to_edit.date_taken = change_to
     assessment_result_to_edit.update(cursor)
-    print("change to --------", change_to)
-# **************************************************EDIT ASSESSMENT_RESULT END*****************************************
 
 
-def exportReport(cursor):
+def delete_assessment_result(cursor):
+    rows = cursor.execute(
+        '''
+     SELECT *
+     FROM Assessment_results''').fetchall()
+
+    print(f'{"Assessment Result ID":<23} {"User ID":<16} {"Assessment ID":<20} {"Score":<15} {"Date Taken":<15} ')
+
+    print("------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
+    for row in rows:
+        print(
+            f'{row[0]!s:<23} {row[1]!s:<16} {row[2]!s:<18} {row[3]!s:<15} {row[4]!s:<16} ')
+
+    assessment_result_id = input(
+        "What Assessment Result do you want to Delete?(Choose by Assesment ID): ")
+    delete_result = input(
+        f"Are you SURE you want to DELETE Assessment Result ID '{assessment_result_id}' Y/N)?: ").upper()
+
+    if delete_result == 'Y':
+        cursor.execute(
+            "DELETE FROM Assessment_results WHERE assessment_results_id=?", (assessment_result_id,))
+        print(
+            f"Assessment Result ID: '{assessment_result_id}' succesfully Deleted!")
+    else:
+        print('')
+    cursor.connection.commit()
+
+
+def export_report_users(cursor):
     csvRows = report_users_competency(cursor)
-    with open('report.csv', 'w', encoding='utf-8') as f:
+    with open('competency_by_users.csv', 'w', encoding='utf-8') as f:
 
         for row in csvRows:
             f.write(row + '\n')
+
+
+def export_report_for_user(cursor):
+    csvRows = report_single_user(cursor)
+    with open('competency_by_user.csv', 'w', encoding='utf-8') as f:
+
+        for row in csvRows:
+            f.write(row + '\n')
+
+
+def import_assessment_results(cursor):
+    final_list = []
+    with open('assessment_results_import.csv', 'r') as newcsvfile:
+        finalcsvreader = csv.reader(newcsvfile)
+
+        fields = next(finalcsvreader)
+
+        for new_ufo_data in finalcsvreader:
+            final_list.append(new_ufo_data)
+        print(
+            f"{fields[0]:^20} {fields[1]:^10} {fields[2]:^30} {fields[3]:^10}")
+        print("-----------------------------------------------------------------------")
+        for final_data in final_list:
+            print(
+                f"{final_data[0]:^20} {final_data[1]:^10} {final_data[2]:^30} {final_data[3]:^10}")
+            assesmentResults = AssesmentResults()
+            assesmentResults.set_all(
+                final_data[0], final_data[1], final_data[2], final_data[3])
+            assesmentResults.save(cursor)
 
 
 def manager_commands(user_input, cursor):
@@ -767,7 +805,6 @@ def manager_commands(user_input, cursor):
     elif(user_input == "5"):
         report_single_user(cursor)
     elif(user_input == "6"):
-        # view a list of assessments for a given user
         list_of_assessments(cursor)
     elif(user_input == "7a"):
         create_user_record(cursor)
@@ -786,11 +823,13 @@ def manager_commands(user_input, cursor):
     elif(user_input == "8d"):
         edit_assessment_result(cursor)
     elif(user_input == "9"):
-        exportReport(cursor)
-    # elif(user_input == "8C"):
-    #     # create_assessment_results(cursor)
-    # elif(user_input == "8D"):
-    #     # create_assessment_results(cursor)
+        export_report_users(cursor)
+    elif(user_input == "10"):
+        export_report_for_user(cursor)
+    elif(user_input == "11"):
+        delete_assessment_result(cursor)
+    elif(user_input == "12"):
+        import_assessment_results(cursor)
 
 
 def user_commands(user_input, cursor, user):
@@ -807,7 +846,10 @@ while query != "q":
 
     if not user or not user.loggedIn:
         query = input(
-            "Welcome\nEnter 'Login' if you already have an account, else enter 'Register'. Or type 'Q' to quit: ").lower()
+            '''                    Welcome\n
+            Enter 'Login'(if you already have an account) 
+            Enter 'Register'. 
+            Type 'Q' to quit: ''').lower()
 
         if query.lower() == "register":
             create_user_record(cursor)
@@ -835,7 +877,10 @@ while query != "q":
                       [8B] edit a competency
                       [8C] edit an assessment
                       [8D] edit an assessment result
-                [9] Report
+                [9] Competency report by competency and users
+                [10] Competency report for a single user
+                [11] Delete Assessment Result
+                [12] Import assessment results from CSV
                 [Logout] Logout of session
             ''').lower()
             manager_commands(query, cursor)
