@@ -7,7 +7,7 @@ This software will track competency levels, or skill levels, for each competency
 1. You will need to clone the project
 2. run ***python capstone.py*** in the terminal
 3. you will be prompted to login, or register
-4. You can either login/create a manager or a user(I have created a manager with (email: jason_fletcher@gmail.com, and password: jason) if you are a manager you will be prompted with these options
+4. You can either login/create a manager or a user(I have created a manager with (email: jason_fletcher@gmail.com, and password: jason or you can create your own) if you are a manager you will be prompted with these options
   [1] You can view all users in a list
   [2] Search for users by first name or last name
   [3] View all user competencies by user
@@ -29,7 +29,7 @@ This software will track competency levels, or skill levels, for each competency
    [11] Delete Assessment Result
    [12] Import assessment results from CSV
    [Logout] Logout of session
-5. If you are a user you will be prompted with these options below (You can register or login in with this user Email: Margaret.Bacon@gmail.com, password: Margaret) 
+5. If you are a user you will be prompted with these options below (You can register or login in with this user Email: Margaret.Bacon@gmail.com, password: Margaret or you can create your own) 
   [1] Edit personal information.
   [2] View Competency and Assessment Data
   [Logout] Logout of session
