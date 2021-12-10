@@ -31,8 +31,6 @@ class AssesmentResults:
           ;'''
         params = (self.user_id[0], self.assessment_id[0],
                   self.score[0], self.date_taken,)
-        print(params)
-        print(self.user_id)
         assessment = Assessments()
         user = User()
         if assessment.get_assessment(self.assessment_id[0], cursor) and user.get_user(self.user_id[0], cursor):
@@ -408,11 +406,11 @@ def view_all_users(cursor):
      FROM Users
      WHERE user_type = 'user';''').fetchall()
 
-    print(f'{"ID":<14} {"First Name":<22} {"Last Name":<20} {"Email":<40} {"active":<15} {"Date Created":<15} {"Hire Date":<15} {"User Type":<30}')
+    print(f'{"ID":<14} {"First Name":<22} {"Last Name":<20} {"Email":<40} {"active":<15} {"Date Created":<29} {"Hire Date":<17} {"User Type":<30}')
 
-    print("------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
+    print("----------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
     for row in rows:
-        print(f'{row[0]!s:<15} {row[1]!s:<25} {row[2]!s:<18} {row[3]!s:<40} {row[4]!s:<16} {row[5]!s:<16} {row[6]!s:<16} {row[7]!s:<20}')
+        print(f'{row[0]!s:<15} {row[1]!s:<25} {row[2]!s:<18} {row[3]!s:<40} {row[4]!s:<16} {row[5]!s:<27} {row[6]!s:<16} {row[7]!s:<20}')
 
 
 def searh_users(cursor):
@@ -581,13 +579,29 @@ def view_data(cursor, user):
    WHERE u.user_id = ?  
 ;''', (user.user_id,)).fetchall()
 
-    print(f'{"First Name":<17} {"Last Name":<20} {"Phone":<20} {"Email":<23} {"Hire Date":<15} {"User Type":<15} {"Assessment ID":<15} {"compentency ID":<30} {"Assessment Name":<40} {"compentency ID":<30} {"compentency Name":<30}')
+    print(f'{"First Name":<17} {"Last Name":<20} {"Phone":<20} {"Email":<23} {"Hire Date":<15} {"User Type":<15}')
 
-    print("--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
+    print("--------------------------------------------------------------------------------------------------------------")
     for row in rows:
-        print(f'{row[0]!s:<17} {row[1]!s:<20} {row[2]!s:<20} {row[3]!s:<23} {row[4]!s:<16} {row[5]!s:<16} {row[6]!s:<16} {row[7]!s:<20} {row[8]!s:<48} {row[9]!s:<30} {row[10]!s:<20}')
+        print(
+            f'{row[0]!s:<17} {row[1]!s:<20} {row[2]!s:<20} {row[3]!s:<23} {row[4]!s:<16} {row[5]!s:<16}')
+    print('\n')
 
-# ********************************************************view data*****************************************************
+    print(f'{"Assessment ID":<15} {"compentency ID":<30} {"Assessment Name":<40} {"compentency ID":<28} {"compentency Name":<30}')
+
+    print("-------------------------------------------------------------------------------------------------------------------------------------")
+    for row in rows:
+        print(
+            f'|{row[6]!s:<16} {row[7]!s:<20} {row[8]!s:<48} {row[9]!s:<30} {row[10]!s:<20}')
+
+    print('\n')
+
+    print(f'{"compentency ID":<28} {"compentency Name":<30}')
+
+    print("-------------------------------------------------------")
+    for row in rows:
+        print(
+            f'{row[9]!s:<30} {row[10]!s:<20}')
 
 
 def edit_users_info(cursor):
@@ -646,7 +660,7 @@ def edit_competency(cursor):
 
     print(
         f' {"ID"}: {comp_to_edit.competency_id!s:<15}\n {"Name"}: {comp_to_edit.name!s:<15}\n {"Date Created"}: {comp_to_edit.date_created!s:<15}\n    ')
-    user_input = input("What field do you want to change?: ").lower()
+    user_input = input("What field do you want to change?: ")
     change_to = input(f"What do you want to change {user_input} to: ")
 
     if user_input == "name":
@@ -846,7 +860,9 @@ while query != "q":
 
     if not user or not user.loggedIn:
         query = input(
-            '''                    Welcome\n
+            '''                    
+            
+                            Welcome\n
             Enter 'Login'(if you already have an account) 
             Enter 'Register'. 
             Type 'Q' to quit: ''').lower()
