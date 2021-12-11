@@ -23,7 +23,7 @@
    [11] Delete Assessment Result
    [12] Import assessment results from CSV
    [Logout] Logout of session
-5. If you are a user you will be prompted with these options below(login in with this user Email: **Margaret.Bacon@gmail.com**, password: **Margaret **
+5. If you are a user you will be prompted with these options below(login in with these users because they are the ones that have data attached Email: **Margaret.Bacon@gmail.com**, password: **Margaret **, Email: **zarate.javier.jz@gmail.com**, Password: **javier**
   [1] Edit personal information.
   [2] View Competency and Assessment Data
   [Logout] Logout of session
