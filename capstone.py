@@ -578,8 +578,6 @@ def edit_personal_information(cursor, user):
 
     user.update(cursor)
 
-# ********************************************************view data*****************************************************
-
 
 def view_data(cursor, user):
     rows = cursor.execute(
