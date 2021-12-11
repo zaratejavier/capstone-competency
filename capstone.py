@@ -76,7 +76,7 @@ class Assessments:
         self.assessment_id = None
         self.competency_id = None
         self.name = None
-        self.date_created = None  # this was 'date_taken'
+        self.date_created = None
 
     def set_all(self, name, competency_id, date_created=datetime.datetime.now()):
         self.competency_id = competency_id
@@ -236,24 +236,40 @@ class User:
                 new_password.encode('utf-8'), self.salt)
 
     def check_password(self, email, new_password, cursor):
-        new_password = bcrypt.hashpw(new_password.encode('utf-8'), self.salt)
-        select_sql = '''
+        if new_password == '12343':
+            print("!!!  PLEASE CHANGE YOUR PASSWORD FROM DEFAULT  !!!")
+            new_password = new_password
+            select_sql = '''
          SELECT email FROM Users WHERE password=? AND email=?
         ;'''
 
-        row = cursor.execute(select_sql, (new_password, email)).fetchone()
+            row = cursor.execute(select_sql, (new_password, email)).fetchone()
 
-        return row
+            return row
+        elif new_password == '123':
+            print("!!!  PLEASE CHANGE YOUR PASSWORD FROM DEFAULT  !!!")
+            new_password = bcrypt.hashpw(
+                new_password.encode('utf-8'), self.salt)
+            select_sql = '''
+         SELECT email FROM Users WHERE password=? AND email=?
+        ;'''
+
+            row = cursor.execute(select_sql, (new_password, email)).fetchone()
+
+            return row
+        else:
+            new_password = bcrypt.hashpw(
+                new_password.encode('utf-8'), self.salt)
+            select_sql = '''
+            SELECT email FROM Users WHERE password=? AND email=?
+            ;'''
+
+            row = cursor.execute(select_sql, (new_password, email)).fetchone()
+            print("---------", row)
+            return row
 
     def change_email(self, new_email):
         self.email = new_email
-
-    def print_me(self):
-        print(f'{self.user_id} {self.last_name}, {self.first_name}')
-        print(f'  {self.city}, {self.state}')
-        print(f'  {self.email}')
-        print(f'  {self.__password}')
-        print(f'  Created: {self.date_created}')
 
     def save(self, cursor):
         insert_sql = '''
@@ -864,7 +880,6 @@ while query != "q":
             
                             Welcome\n
             Enter 'Login'(if you already have an account) 
-            Enter 'Register'. 
             Type 'Q' to quit: ''').lower()
 
         if query.lower() == "register":
@@ -874,7 +889,6 @@ while query != "q":
             password = input("Password: ")
             user = loginUser(email, password, cursor)
     else:
-        # query = input('Which command do you want to run: ')
         if user.user_type == "manager":
             query = input('''
                 [1] You can view all users in a list
